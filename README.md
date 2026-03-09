@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="tr" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klavye Dedektifi</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    
+    :root {
+      --bg-gradient-start: #667eea;
+      --bg-gradient-end: #764ba2;
+      --card-bg: #ffffff;
+      --text-primary: #2d3748;
+      --accent-yellow: #fbbf24;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --heart-active: #ef4444;
+      --heart-inactive: #d1d5db;
+    }
+    
+    body {
+      font-family: 'Nunito', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .game-title {
+      font-family: 'Bubblegum Sans', cursive;
+    }
+    
+    .bounce-in {
+      animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes bounceIn {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .pulse-glow {
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+      50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+    }
+    
+    .heart-beat {
+      animation: heartBeat 1s ease-in-out infinite;
+    }
+    
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .heart-lose {
+      animation: heartLose 0.5s ease-out forwards;
+    }
+    
+    @keyframes heartLose {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(0.8); opacity: 0.3; }
+    }
+    
+    .letter-appear {
+      animation: letterAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes letterAppear {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    
+    .correct-flash {
+      animation: correctFlash 0.5s ease-out;
+    }
+    
+    @keyframes correctFlash {
+      0% { background-color: #10b981; transform: scale(1.1); }
+      100% { background-color: #fef3c7; transform: scale(1); }
+    }
+    
+    .wrong-shake {
+      animation: wrongShake 0.5s ease-out;
+    }
+    
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); background-color: #fecaca; }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+    }
+    
+    .floating {
+      animation: floating 3s ease-in-out infinite;
+    }
+    
+    @keyframes floating {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .star-spin {
+      animation: starSpin 2s linear infinite;
+    }
+    
+    @keyframes starSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: confettiFall 3s ease-out forwards;
+    }
+    
+    @keyframes confettiFall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+    }
+    
+    .timer-warning {
+      animation: timerWarning 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes timerWarning {
+      0%, 100% { color: #ef4444; }
+      50% { color: #fbbf24; }
+    }
+    
+    .input-blink {
+      animation: inputBlink 1s ease-in-out infinite;
+    }
+    
+    @keyframes inputBlink {
+      0%, 100% { border-color: #fbbf24; }
+      50% { border-color: #667eea; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"><!-- Start Screen -->
+   <div id="startScreen" class="h-full flex flex-col items-center justify-center p-6 relative"><!-- Floating decorations -->
+    <div class="absolute top-10 left-10 text-6xl floating" style="animation-delay: 0s;">
+     ⭐
+    </div>
+    <div class="absolute top-20 right-16 text-5xl floating" style="animation-delay: 0.5s;">
+     🎈
+    </div>
+    <div class="absolute bottom-32 left-16 text-5xl floating" style="animation-delay: 1s;">
+     🎯
+    </div>
+    <div class="absolute bottom-20 right-10 text-6xl floating" style="animation-delay: 1.5s;">
+     🌟
+    </div>
+    <div class="bg-white/95 rounded-3xl shadow-2xl p-8 md:p-12 max-w-lg w-full text-center bounce-in relative overflow-hidden"><!-- Decorative circles -->
+     <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-300 rounded-full opacity-30"></div>
+     <div class="absolute -bottom-10 -left-10 w-24 h-24 bg-pink-300 rounded-full opacity-30"></div>
+     <div class="relative z-10"><!-- Keyboard emoji -->
+      <div class="text-7xl mb-4">
+       ⌨️
+      </div>
+      <h1 id="titleText" class="game-title text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-6">Klavye Dedektifi</h1>
+      <p id="instructionText" class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">🎯 Ekrandaki harfi klavyeden yaz ve puan kazan!</p>
+      <div class="flex justify-center gap-4 mb-8">
+       <div class="bg-red-100 rounded-xl p-3 text-center">
+        <div class="text-2xl">
+         ❤️❤️❤️
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+         3 Can
+        </div>
+       </div>
+       <div class="bg-yellow-100 rounded-xl p-3 text-center">
+        <div class="text-2xl">
+         ⏱️
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+         20 Saniye
+        </div>
+       </div>
+       <div class="bg-green-100 rounded-xl p-3 text-center">
+        <div class="text-2xl">
+         🏆
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+         100 Puan
+        </div>
+       </div>
+      </div><button id="startBtn" class="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 pulse-glow"> 🎮 Oyuna Başla! </button>
+     </div>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="gameScreen" class="h-full flex flex-col items-center justify-center p-4 hidden">
+    <div class="w-full max-w-2xl"><!-- Top Bar: Lives and Score -->
+     <div class="flex justify-between items-center mb-6 bg-white/90 rounded-2xl p-4 shadow-lg"><!-- Lives -->
+      <div class="flex items-center gap-2"><span class="text-lg font-bold text-gray-700">Canlar:</span>
+       <div id="heartsContainer" class="flex gap-1"><span class="heart text-3xl heart-beat" data-heart="1">❤️</span> <span class="heart text-3xl heart-beat" data-heart="2" style="animation-delay: 0.2s;">❤️</span> <span class="heart text-3xl heart-beat" data-heart="3" style="animation-delay: 0.4s;">❤️</span>
+       </div>
+      </div><!-- Score -->
+      <div class="flex items-center gap-2 bg-yellow-100 rounded-xl px-4 py-2"><span class="text-2xl">🏆</span> <span id="scoreDisplay" class="text-2xl font-bold text-yellow-600">0</span> <span class="text-lg text-gray-600">/ 100</span>
+      </div>
+     </div><!-- Timer Bar -->
+     <div class="bg-white/90 rounded-2xl p-4 mb-6 shadow-lg">
+      <div class="flex items-center justify-between mb-2"><span class="text-lg font-bold text-gray-700 flex items-center gap-2"> <span class="text-2xl">⏱️</span> Süre </span> <span id="timerText" class="text-2xl font-bold text-green-500">20</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+       <div id="timerBar" class="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000" style="width: 100%;"></div>
+      </div>
+     </div><!-- Letter Display -->
+     <div class="bg-white/95 rounded-3xl p-8 shadow-2xl text-center mb-6">
+      <p class="text-lg text-gray-500 mb-4">Bu harfi yaz:</p>
+      <div id="letterCard" class="bg-gradient-to-br from-yellow-100 to-orange-100 rounded-2xl p-8 mb-6 inline-block min-w-64 shadow-inner">
+       <div id="letterDisplay" class="letter-appear"><span id="upperLetter" class="text-8xl md:text-9xl font-bold text-purple-600 block">A</span> <span id="lowerLetter" class="text-6xl md:text-7xl font-bold text-pink-500 block mt-2">a</span>
+       </div>
+      </div><!-- User Input Display -->
+      <div class="mt-4">
+       <p class="text-lg text-gray-500 mb-2">Yazdığın harf:</p>
+       <div id="inputDisplay" class="text-6xl font-bold text-indigo-600 h-20 flex items-center justify-center bg-indigo-50 rounded-xl border-4 border-indigo-200 input-blink">
+        _
+       </div>
+      </div><!-- Feedback Message -->
+      <div id="feedbackMessage" class="mt-4 text-xl font-bold h-8"></div>
+     </div><!-- Progress -->
+     <div class="bg-white/90 rounded-2xl p-4 shadow-lg">
+      <div class="flex items-center justify-between"><span class="text-lg font-bold text-gray-700">İlerleme:</span> <span id="progressText" class="text-lg text-gray-600">Harf 1 / 10</span>
+      </div>
+      <div class="flex gap-1 mt-2 flex-wrap justify-center">
+       <div id="progressDots"></div>
+      </div>
+     </div>
+    </div>
+   </div><!-- End Screen -->
+   <div id="endScreen" class="h-full flex flex-col items-center justify-center p-6 hidden relative">
+    <div id="confettiContainer" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+    <div class="bg-white/95 rounded-3xl shadow-2xl p-8 md:p-12 max-w-lg w-full text-center bounce-in relative z-10">
+     <div id="endEmoji" class="text-8xl mb-6">
+      🎉
+     </div>
+     <h2 id="endTitle" class="game-title text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-4">Tebrikler!</h2>
+     <p id="endMessage" class="text-xl text-gray-600 mb-4"></p>
+     <p id="finalScore" class="text-2xl font-bold text-yellow-600 mb-8"></p><button id="restartBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300"> 🔄 Tekrar Oyna </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      game_title: "Klavye Dedektifi",
+      instruction_text: "🎯 Ekrandaki harfi klavyeden yaz ve puan kazan!",
+      win_message: "Tebrikler, Klavye Dedektifi Oldun!",
+      lose_message: "Tekrar dene!",
+      background_color: "#667eea",
+      card_color: "#ffffff",
+      text_color: "#2d3748",
+      primary_action_color: "#10b981",
+      secondary_action_color: "#8b5cf6"
+    };
+
+    // Game state
+    let gameState = {
+      currentLetterIndex: 0,
+      score: 0,
+      lives: 3,
+      timer: 20,
+      timerInterval: null,
+      isPlaying: false
+    };
+
+    const alphabet = 'ABCDEFGHIJ'; // First 10 letters for 100 points
+
+    // DOM Elements
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const endScreen = document.getElementById('endScreen');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const letterCard = document.getElementById('letterCard');
+    const upperLetter = document.getElementById('upperLetter');
+    const lowerLetter = document.getElementById('lowerLetter');
+    const inputDisplay = document.getElementById('inputDisplay');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const timerText = document.getElementById('timerText');
+    const timerBar = document.getElementById('timerBar');
+    const progressText = document.getElementById('progressText');
+    const progressDots = document.getElementById('progressDots');
+    const feedbackMessage = document.getElementById('feedbackMessage');
+    const heartsContainer = document.getElementById('heartsContainer');
+    const endTitle = document.getElementById('endTitle');
+    const endMessage = document.getElementById('endMessage');
+    const endEmoji = document.getElementById('endEmoji');
+    const finalScore = document.getElementById('finalScore');
+    const confettiContainer = document.getElementById('confettiContainer');
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          // Update title
+          document.getElementById('titleText').textContent = config.game_title || defaultConfig.game_title;
+          
+          // Update instruction text
+          document.getElementById('instructionText').textContent = config.instruction_text || defaultConfig.instruction_text;
+          
+          // Store messages for later use
+          gameState.winMessage = config.win_message || defaultConfig.win_message;
+          gameState.loseMessage = config.lose_message || defaultConfig.lose_message;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.card_color || defaultConfig.card_color,
+              set: (value) => {
+                config.card_color = value;
+                window.elementSdk.setConfig({ card_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.primary_action_color || defaultConfig.primary_action_color,
+              set: (value) => {
+                config.primary_action_color = value;
+                window.elementSdk.setConfig({ primary_action_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+              set: (value) => {
+                config.secondary_action_color = value;
+                window.elementSdk.setConfig({ secondary_action_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["instruction_text", config.instruction_text || defaultConfig.instruction_text],
+          ["win_message", config.win_message || defaultConfig.win_message],
+          ["lose_message", config.lose_message || defaultConfig.lose_message]
+        ])
+      });
+    }
+
+    // Initialize progress dots
+    function initProgressDots() {
+      progressDots.innerHTML = '';
+      for (let i = 0; i < alphabet.length; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'inline-block w-6 h-6 rounded-full bg-gray-300 mx-1 transition-all duration-300';
+        dot.id = `dot-${i}`;
+        progressDots.appendChild(dot);
+      }
+    }
+
+    // Update display
+    function updateDisplay() {
+      const letter = alphabet[gameState.currentLetterIndex];
+      upperLetter.textContent = letter;
+      lowerLetter.textContent = letter.toLowerCase();
+      
+      // Trigger animation
+      const letterDisplay = document.getElementById('letterDisplay');
+      letterDisplay.classList.remove('letter-appear');
+      void letterDisplay.offsetWidth; // Trigger reflow
+      letterDisplay.classList.add('letter-appear');
+      
+      scoreDisplay.textContent = gameState.score;
+      progressText.textContent = `Harf ${gameState.currentLetterIndex + 1} / ${alphabet.length}`;
+      inputDisplay.textContent = '_';
+      feedbackMessage.textContent = '';
+      feedbackMessage.className = 'mt-4 text-xl font-bold h-8';
+    }
+
+    // Update hearts display
+    function updateHearts() {
+      const hearts = heartsContainer.querySelectorAll('.heart');
+      hearts.forEach((heart, index) => {
+        if (index < gameState.lives) {
+          heart.textContent = '❤️';
+          heart.classList.remove('heart-lose');
+          heart.classList.add('heart-beat');
+        } else {
+          heart.textContent = '🖤';
+          heart.classList.remove('heart-beat');
+          heart.classList.add('heart-lose');
+        }
+      });
+    }
+
+    // Start timer
+    function startTimer() {
+      gameState.timer = 20;
+      updateTimerDisplay();
+      
+      gameState.timerInterval = setInterval(() => {
+        gameState.timer--;
+        updateTimerDisplay();
+        
+        if (gameState.timer <= 0) {
+          handleWrongAnswer('⏰ Süre doldu!');
+        }
+      }, 1000);
+    }
+
+    // Update timer display
+    function updateTimerDisplay() {
+      timerText.textContent = gameState.timer;
+      const percentage = (gameState.timer / 20) * 100;
+      timerBar.style.width = `${percentage}%`;
+      
+      if (gameState.timer <= 5) {
+        timerText.classList.add('timer-warning');
+        timerBar.className = 'h-full bg-gradient-to-r from-red-400 to-red-500 rounded-full transition-all duration-1000';
+      } else if (gameState.timer <= 10) {
+        timerText.classList.remove('timer-warning');
+        timerBar.className = 'h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-1000';
+      } else {
+        timerText.classList.remove('timer-warning');
+        timerBar.className = 'h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000';
+      }
+    }
+
+    // Stop timer
+    function stopTimer() {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+      }
+    }
+
+    // Handle correct answer
+    function handleCorrectAnswer() {
+      stopTimer();
+      
+      gameState.score += 10;
+      scoreDisplay.textContent = gameState.score;
+      
+      // Update progress dot
+      const dot = document.getElementById(`dot-${gameState.currentLetterIndex}`);
+      dot.className = 'inline-block w-6 h-6 rounded-full bg-green-500 mx-1 transition-all duration-300 transform scale-125';
+      
+      // Show feedback
+      feedbackMessage.textContent = '✅ Harika! +10 Puan';
+      feedbackMessage.className = 'mt-4 text-xl font-bold h-8 text-green-500';
+      
+      // Animate card
+      letterCard.classList.add('correct-flash');
+      setTimeout(() => letterCard.classList.remove('correct-flash'), 500);
+      
+      // Check for win
+      if (gameState.score >= 100) {
+        setTimeout(() => endGame(true), 800);
+        return;
+      }
+      
+      // Next letter
+      gameState.currentLetterIndex++;
+      setTimeout(() => {
+        updateDisplay();
+        startTimer();
+      }, 1000);
+    }
+
+    // Handle wrong answer
+    function handleWrongAnswer(message) {
+      stopTimer();
+      
+      gameState.lives--;
+      updateHearts();
+      
+      // Update progress dot
+      const dot = document.getElementById(`dot-${gameState.currentLetterIndex}`);
+      dot.className = 'inline-block w-6 h-6 rounded-full bg-red-500 mx-1 transition-all duration-300';
+      
+      // Show feedback
+      feedbackMessage.textContent = message || '❌ Yanlış harf!';
+      feedbackMessage.className = 'mt-4 text-xl font-bold h-8 text-red-500';
+      
+      // Animate card
+      letterCard.classList.add('wrong-shake');
+      setTimeout(() => letterCard.classList.remove('wrong-shake'), 500);
+      
+      // Check for game over
+      if (gameState.lives <= 0) {
+        setTimeout(() => endGame(false), 800);
+        return;
+      }
+      
+      // Reset progress dot after delay
+      setTimeout(() => {
+        dot.className = 'inline-block w-6 h-6 rounded-full bg-gray-300 mx-1 transition-all duration-300';
+      }, 500);
+      
+      // Restart timer for same letter
+      setTimeout(() => {
+        inputDisplay.textContent = '_';
+        feedbackMessage.textContent = '';
+        startTimer();
+      }, 1000);
+    }
+
+    // Create confetti
+    function createConfetti() {
+      const colors = ['#fbbf24', '#10b981', '#8b5cf6', '#ef4444', '#3b82f6', '#ec4899'];
+      confettiContainer.innerHTML = '';
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = `${Math.random() * 2}s`;
+        confetti.style.animationDuration = `${2 + Math.random() * 2}s`;
+        confettiContainer.appendChild(confetti);
+      }
+    }
+
+    // End game
+    function endGame(isWin) {
+      stopTimer();
+      gameState.isPlaying = false;
+      
+      gameScreen.classList.add('hidden');
+      endScreen.classList.remove('hidden');
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      if (isWin) {
+        endEmoji.textContent = '🏆';
+        endTitle.textContent = 'Kazandın!';
+        endMessage.textContent = config.win_message || defaultConfig.win_message;
+        createConfetti();
+      } else {
+        endEmoji.textContent = '😢';
+        endTitle.textContent = 'Oyun Bitti!';
+        endMessage.textContent = config.lose_message || defaultConfig.lose_message;
+      }
+      
+      finalScore.textContent = `Puanın: ${gameState.score}`;
+    }
+
+    // Start game
+    function startGame() {
+      // Reset state
+      gameState = {
+        currentLetterIndex: 0,
+        score: 0,
+        lives: 3,
+        timer: 20,
+        timerInterval: null,
+        isPlaying: true
+      };
+      
+      // Update UI
+      startScreen.classList.add('hidden');
+      endScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      
+      initProgressDots();
+      updateHearts();
+      updateDisplay();
+      startTimer();
+    }
+
+    // Keyboard input handler
+    document.addEventListener('keydown', (e) => {
+      if (!gameState.isPlaying) return;
+      
+      const key = e.key.toUpperCase();
+      const currentLetter = alphabet[gameState.currentLetterIndex];
+      
+      // Only accept letter keys
+      if (!/^[A-Z]$/.test(key)) return;
+      
+      // Display the pressed key
+      inputDisplay.textContent = key;
+      
+      // Check if correct
+      setTimeout(() => {
+        if (key === currentLetter) {
+          handleCorrectAnswer();
+        } else {
+          handleWrongAnswer('❌ Yanlış harf!');
+        }
+      }, 300);
+    });
+
+    // Button handlers
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', () => {
+      endScreen.classList.add('hidden');
+      startGame();
+    });
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d9a2c9247175153',t:'MTc3MzA2MDI5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html> 
